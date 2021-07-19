@@ -15,7 +15,8 @@ app.use(function(req, res, next) {
 });
 
 // Edit this with YOUR email address.
-var email = "lovelyplanet@tutanota.com";
+var email = "email@tuta.com";
+var notficationEmail = email;
 
 // Load your AWS credentials and try to instantiate the object.
 aws.config.loadFromPath(__dirname + '/config.json');
@@ -71,7 +72,7 @@ app.post('/testargs', function (req, res) {
 });
 
 app.post('/sendEmail', function (req, res) {
-    var params = {
+    var customerEmail = {
         Source: email,
         Destination: {
             BccAddresses: [ ],
@@ -99,7 +100,39 @@ app.post('/sendEmail', function (req, res) {
         ReplyToAddresses: [
         ],
     };
-    ses.sendEmail(params, function (err, data) {
+    var notificationEmail = {
+        Source: email,
+        Destination: {
+            BccAddresses: [ ],
+            CcAddresses: [],
+            ToAddresses: [
+                notificationEmail
+            ]
+        },
+        Message: {
+            Body: {
+                Html: {
+                    Charset: "UTF-8",
+                    Data: `<h1>New clients email from <a href="https://www.akashofficial.com/">akashofficial.com<a> received!<br><h2>Data:</h2><p>name: ${req.body.name}</p>,</h1><br><p>email: ${body.email}</p><br><p>country: ${body.country}</p><br><p>phone: ${body.phone}</p><br><p>message: ${body.message}</p>`
+                },
+                Text: {
+                    Charset: "UTF-8",
+                    Data: `New clients email from akashofficial.com was received. Name: ${req.body.name}, email: ${req.body.email}, country: ${req.body.country}, phone: ${req.body.phone}, message: ${req.body.message}`
+                }
+            },
+            Subject: {
+                Charset: "UTF-8",
+                Data: "We are received your email"
+            }
+        },
+        ReplyToAddresses: [
+        ],
+    };   
+    ses.sendEmail(customerEmail, function (err, data) {
+        if (err) console.log(err, err.stack); // an error occurred
+        else console.log(data);           // successful response
+    });
+    ses.sendEmail(notificationEmail, function (err, data) {
         if (err) console.log(err, err.stack); // an error occurred
         else console.log(data);           // successful response
     });

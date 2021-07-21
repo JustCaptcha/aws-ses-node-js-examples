@@ -6,7 +6,7 @@ var bp = require('body-parser');
 var cors = require('cors')
 app.use(bp.json())
 app.use(bp.urlencoded({ extended: true }))
-// app.use(cors())
+app.use(cors())
 
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -15,8 +15,8 @@ app.use(function(req, res, next) {
 });
 
 // Edit this with YOUR email address.
-var email = "email@tuta.com";
-var notficationEmail = email;
+var email = "hello@akashofficial.com";
+var notify_to = "hello@akashofficial.com";
 
 // Load your AWS credentials and try to instantiate the object.
 aws.config.loadFromPath(__dirname + '/config.json');
@@ -75,7 +75,7 @@ app.post('/sendEmail', function (req, res) {
     var customerEmail = {
         Source: email,
         Destination: {
-            BccAddresses: [ ],
+            BccAddresses: [],
             CcAddresses: [],
             ToAddresses: [
                 req.body.email
@@ -85,7 +85,7 @@ app.post('/sendEmail', function (req, res) {
             Body: {
                 Html: {
                     Charset: "UTF-8",
-                    Data: `<h1>Hello ${req.body.name},</h1> <p>We are perceived your email, I will reply within 24 hours.</p>`
+                    Data: `<h1>Hello ${req.body.name},</h1> <p>We are perceived your email, I will reply within <b>24<b> hours.</p>`
                 },
                 Text: {
                     Charset: "UTF-8",
@@ -103,17 +103,17 @@ app.post('/sendEmail', function (req, res) {
     var notificationEmail = {
         Source: email,
         Destination: {
-            BccAddresses: [ ],
+            BccAddresses: [],
             CcAddresses: [],
             ToAddresses: [
-                notificationEmail
+               notify_to 
             ]
         },
         Message: {
             Body: {
                 Html: {
                     Charset: "UTF-8",
-                    Data: `<h1>New clients email from <a href="https://www.akashofficial.com/">akashofficial.com<a> received!<br><h2>Data:</h2><p>name: ${req.body.name}</p>,</h1><br><p>email: ${body.email}</p><br><p>country: ${body.country}</p><br><p>phone: ${body.phone}</p><br><p>message: ${body.message}</p>`
+                    Data: `<h1>New clients email from <a href="https://www.akashofficial.com/">akashofficial.com<a> received!</h1><p>name: ${req.body.name}</p><p>email: ${req.body.email}</p><p>country: ${req.body.country}</p><p>phone: ${req.body.phone}</p><p>message: ${req.body.message}</p>`
                 },
                 Text: {
                     Charset: "UTF-8",
@@ -122,12 +122,13 @@ app.post('/sendEmail', function (req, res) {
             },
             Subject: {
                 Charset: "UTF-8",
-                Data: "We are received your email"
+                Data: "New received message"
             }
         },
         ReplyToAddresses: [
         ],
     };   
+
     ses.sendEmail(customerEmail, function (err, data) {
         if (err) console.log(err, err.stack); // an error occurred
         else console.log(data);           // successful response
@@ -136,10 +137,11 @@ app.post('/sendEmail', function (req, res) {
         if (err) console.log(err, err.stack); // an error occurred
         else console.log(data);           // successful response
     });
+    res.sendStatus(200);
 });
 
 // Start server.
-var server = app.listen(8888, 'localhost', function () {
+var server = app.listen(80, function () {
     var host = server.address().address;
     var port = server.address().port;
 

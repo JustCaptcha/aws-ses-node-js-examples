@@ -1,18 +1,41 @@
-// Require objects.
 var express = require('express');
 var app = express();
 var aws = require('aws-sdk');
 var bp = require('body-parser');
-var cors = require('cors')
+var cors = require('cors');
+//var https = require('https');
+var fs = require('fs');
+var privateKey  = fs.readFileSync('./sslcert/key.pem', 'utf8');
+var certificate = fs.readFileSync('./sslcert/cert.pem', 'utf8');
+
 app.use(bp.json())
 app.use(bp.urlencoded({ extended: true }))
-app.use(cors())
 
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+app.use((req,res,next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'OPTIONS,GET,PUT,POST,DELETE');
+  res.header('Access-Control-Allow-Headers','Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
   next();
-});
+})
+
+var whitelist = ['https://akashofficial-com.vercel.app', 'https://www.akashofficial.com'];
+
+var corsOptions = {
+  origin: function(origin, callback){
+    // allow requests with no origin 
+    console.log(origin);
+    if(!origin) return callback(null, true);
+    console.log(whitelist.indexOf(origin) === -1);
+    if(whitelist.indexOf(origin) === -1){
+      var message = 'The CORS policy for this origin doesnt' + 'allow access from the particular origin.';
+      return callback(new Error(message), false);
+    }
+    return callback(null, true);
+  }
+};
+
+app.use(cors(corsOptions));
 
 // Edit this with YOUR email address.
 var email = "hello@akashofficial.com";
@@ -23,6 +46,11 @@ aws.config.loadFromPath(__dirname + '/config.json');
 
 // Instantiate SES.
 var ses = new aws.SES({ apiVersion: "2010-12-01" });
+
+app.get('/', (req, res) => { 
+	res.send('this is an secure server')
+	console.log('GET');
+});
 
 app.get('/verify', function (req, res) {
     var params = {
@@ -71,7 +99,7 @@ app.post('/testargs', function (req, res) {
     console.log(req.body)
 });
 
-app.post('/sendEmail', function (req, res) {
+app.post('/sendEmail', cors(), function (req, res) {
     var customerEmail = {
         Source: email,
         Destination: {
@@ -140,10 +168,10 @@ app.post('/sendEmail', function (req, res) {
     res.sendStatus(200);
 });
 
-// Start server.
-var server = app.listen(80, function () {
+var server = app.listen(5000, function () {
     var host = server.address().address;
     var port = server.address().port;
 
     console.log('AWS SES example app listening at http://%s:%s', host, port);
 });
+
